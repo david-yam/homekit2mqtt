@@ -1,14 +1,13 @@
-module.exports = function (iface) {
+/* eslint unicorn/filename-case: "off", func-names: "off", camelcase: "off", no-unused-vars: "off" */
 
+module.exports = function (iface) {
     // TODO
 
-
-    var {mqttPub, mqttSub, mqttStatus, log, newAccessory, Service, Characteristic} = iface;
+    const {mqttPub, mqttSub, mqttStatus, log, newAccessory, Service, Characteristic} = iface;
 
     return function createAccessory_SecuritySystem(settings) {
-        var acc = newAccessory(settings);
+        const acc = newAccessory(settings);
         // Required Characteristics
-
 
         /*
          this.addCharacteristic(Characteristic.SecuritySystemTargetState);
@@ -22,10 +21,10 @@ module.exports = function (iface) {
 
         acc.addService(Service.SecuritySystem, settings.name)
             .getCharacteristic(Characteristic.SecuritySystemTargetState)
-            .on('set', function(value, callback) {
+            .on('set', (value, callback) => {
                 log.debug('< hap set', settings.name, 'SecuritySystemTargetState', value);
                 /*
-                if (value === Characteristic.SecuritySystemTargetState.STAY_ARM) {
+                If (value === Characteristic.SecuritySystemTargetState.STAY_ARM) {
                     value = settings.payload.STAY_ARM;
                 } else if (value === Characteristic.SecuritySystemTargetState.AWAY_ARM) {
                     value = settings.payload.AWAY_ARM;
@@ -41,7 +40,7 @@ module.exports = function (iface) {
             });
 
         /*
-         this.addCharacteristic(Characteristic.SecuritySystemCurrentState);
+         This.addCharacteristic(Characteristic.SecuritySystemCurrentState);
 
          Characteristic.SecuritySystemCurrentState.STAY_ARM = 0;
          Characteristic.SecuritySystemCurrentState.AWAY_ARM = 1;
@@ -50,10 +49,9 @@ module.exports = function (iface) {
          Characteristic.SecuritySystemCurrentState.ALARM_TRIGGERED = 4;
          */
 
-
-        mqttSub(settings.topic.statusSecuritySystemCurrentState, function (val) {
+        mqttSub(settings.topic.statusSecuritySystemCurrentState, val => {
             /*
-            if (val === settings.payload.STAY_ARM) {
+            If (val === settings.payload.STAY_ARM) {
                 val = Characteristic.SecuritySystemCurrentState.STAY_ARM;
             } else if (val === settings.payload.AWAY_ARM) {
                 val = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
@@ -72,18 +70,15 @@ module.exports = function (iface) {
                 acc.getService(Service.SecuritySystem)
                     .updateCharacteristic(Characteristic.SecuritySystemTargetState, val);
             }
-
-
-
         });
 
         acc.getService(Service.SecuritySystem)
             .getCharacteristic(Characteristic.SecuritySystemCurrentState)
-            .on('get', function (callback) {
+            .on('get', callback => {
                 log.debug('< hap get', settings.name, 'SecuritySystemCurrentState');
-                var val = mqttStatus[settings.topic.statusSecuritySystemCurrentState];
+                const val = mqttStatus[settings.topic.statusSecuritySystemCurrentState];
                 /*
-                if (val === settings.payload.STAY_ARM) {
+                If (val === settings.payload.STAY_ARM) {
                     val = Characteristic.SecuritySystemCurrentState.STAY_ARM;
                 } else if (val === settings.payload.AWAY_ARM) {
                     val = Characteristic.SecuritySystemCurrentState.AWAY_ARM;
@@ -99,14 +94,7 @@ module.exports = function (iface) {
                 callback(null, val);
             });
 
-
-
-
         /*
-
-
-
-
 
          // Optional Characteristics
          this.addOptionalCharacteristic(Characteristic.StatusFault);
@@ -127,10 +115,6 @@ module.exports = function (iface) {
 
          */
 
-
-
         return acc;
-
-    }
-
+    };
 };

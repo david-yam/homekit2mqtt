@@ -1,10 +1,10 @@
-module.exports = function (iface) {
+/* eslint unicorn/filename-case: "off", func-names: "off", camelcase: "off", no-unused-vars: "off" */
 
-    var {mqttPub, mqttSub, mqttStatus, log, newAccessory, Service, Characteristic} = iface;
+module.exports = function (iface) {
+    const {mqttPub, mqttSub, mqttStatus, log, newAccessory, Service, Characteristic} = iface;
 
     return function createAccessory_Fan(settings) {
-
-        var acc = newAccessory(settings);
+        const acc = newAccessory(settings);
 
         if (typeof settings.payload.onTrue === 'undefined') {
             settings.payload.onTrue = true;
@@ -24,38 +24,37 @@ module.exports = function (iface) {
 
         acc.addService(Service.Fan, settings.name)
             .getCharacteristic(Characteristic.On)
-            .on('set', function(value, callback) {
+            .on('set', (value, callback) => {
                 log.debug('< hap set', settings.name, 'On', value);
-                var on = value ? settings.payload.onTrue : settings.payload.onFalse;
+                const on = value ? settings.payload.onTrue : settings.payload.onFalse;
                 log.debug('> mqtt', settings.topic.setOn, on);
                 mqttPub(settings.topic.setOn, on);
                 callback();
             });
 
         if (settings.topic.statusOn) {
-            mqttSub(settings.topic.statusOn, function (val) {
-                var on = val === settings.payload.onTrue;
+            mqttSub(settings.topic.statusOn, val => {
+                const on = val === settings.payload.onTrue;
                 log.debug('> hap update', settings.name, 'On', on);
                 acc.getService(Service.Fan)
-                    .updateCharacteristic(Characteristic.On, on)
+                    .updateCharacteristic(Characteristic.On, on);
             });
             acc.getService(Service.Fan)
                 .getCharacteristic(Characteristic.On)
-                .on('get', function (callback) {
+                .on('get', callback => {
                     log.debug('< hap get', settings.name, 'On');
-                    var on = mqttStatus[settings.topic.statusOn] === settings.payload.onTrue;
+                    const on = mqttStatus[settings.topic.statusOn] === settings.payload.onTrue;
                     log.debug('> hap re_get', settings.name, 'On', on);
                     callback(null, on);
                 });
-
         }
 
         if (settings.topic.setRotationDirection) {
             acc.getService(Service.Fan, settings.name)
                 .getCharacteristic(Characteristic.RotationDirection)
-                .on('set', function (value, callback) {
+                .on('set', (value, callback) => {
                     log.debug('< hap set', settings.name, 'RotationDirection', value);
-                    var dir = value === Characteristic.RotationDirection.COUNTER_CLOCKWISE ?
+                    const dir = value === Characteristic.RotationDirection.COUNTER_CLOCKWISE ?
                         settings.payload.rotationDirectionCounterClockwise :
                         settings.payload.rotationDirectionClockwise;
 
@@ -66,33 +65,32 @@ module.exports = function (iface) {
         }
 
         if (settings.topic.statusRotationDirection) {
-            mqttSub(settings.topic.statusRotationDirection, function (val) {
-                var dir = mqttStatus[settings.topic.statusRotationDirection] === settings.payload.rotationDirectionCounterClockwise ?
+            mqttSub(settings.topic.statusRotationDirection, val => {
+                const dir = mqttStatus[settings.topic.statusRotationDirection] === settings.payload.rotationDirectionCounterClockwise ?
                     Characteristic.RotationDirection.COUNTER_CLOCKWISE :
                     Characteristic.RotationDirection.CLOCKWISE;
                 log.debug('> hap update', settings.name, 'RotationDirection', dir);
                 acc.getService(Service.Fan)
-                    .updateCharacteristic(Characteristic.RotationDirection, dir)
+                    .updateCharacteristic(Characteristic.RotationDirection, dir);
             });
             acc.getService(Service.Fan)
                 .getCharacteristic(Characteristic.RotationDirection)
-                .on('get', function (callback) {
+                .on('get', callback => {
                     log.debug('< hap get', settings.name, 'RotationDirection');
-                    var dir = mqttStatus[settings.topic.statusRotationDirection] === settings.payload.rotationDirectionCounterClockwise ?
+                    const dir = mqttStatus[settings.topic.statusRotationDirection] === settings.payload.rotationDirectionCounterClockwise ?
                         Characteristic.RotationDirection.COUNTER_CLOCKWISE :
                         Characteristic.RotationDirection.CLOCKWISE;
                     log.debug('> hap re_get', settings.name, 'RotationDirection', dir);
                     callback(null, dir);
                 });
-
         }
 
         if (settings.topic.setRotationSpeed) {
             acc.getService(Service.Fan, settings.name)
                 .getCharacteristic(Characteristic.RotationSpeed)
-                .on('set', function (value, callback) {
+                .on('set', (value, callback) => {
                     log.debug('< hap set', settings.name, 'RotationSpeed', value);
-                    var speed = (value * (settings.payload.rotationSpeedFactor || 1)) || 0;
+                    const speed = (value * (settings.payload.rotationSpeedFactor || 1)) || 0;
                     log.debug('> mqtt', settings.topic.setRotationSpeed, speed);
                     mqttPub(settings.topic.setRotationSpeed, speed);
                     callback();
@@ -100,25 +98,22 @@ module.exports = function (iface) {
         }
 
         if (settings.topic.statusRotationSpeed) {
-            mqttSub(settings.topic.statusRotationSpeed, function (val) {
-                var speed = (val / (settings.payload.rotationSpeedFactor || 1)) || 0;
+            mqttSub(settings.topic.statusRotationSpeed, val => {
+                const speed = (val / (settings.payload.rotationSpeedFactor || 1)) || 0;
                 log.debug('> hap update', settings.name, 'RotationSpeed', speed);
                 acc.getService(Service.Fan)
-                    .updateCharacteristic(Characteristic.RotationSpeed, speed)
+                    .updateCharacteristic(Characteristic.RotationSpeed, speed);
             });
             acc.getService(Service.Fan)
                 .getCharacteristic(Characteristic.RotationSpeed)
-                .on('get', function (callback) {
+                .on('get', callback => {
                     log.debug('< hap get', settings.name, 'RotationSpeed');
-                    var speed = (mqttStatus[settings.topic.statusRotationSpeed] / (settings.payload.rotationSpeedFactor || 1)) || 0;
+                    const speed = (mqttStatus[settings.topic.statusRotationSpeed] / (settings.payload.rotationSpeedFactor || 1)) || 0;
                     log.debug('> hap re_get', settings.name, 'RotationSpeed', speed);
                     callback(null, speed);
                 });
-
         }
 
         return acc;
-
-    }
-
+    };
 };

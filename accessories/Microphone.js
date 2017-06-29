@@ -1,6 +1,7 @@
-module.exports = function (iface) {
+/* eslint unicorn/filename-case: "off", func-names: "off", camelcase: "off", no-unused-vars: "off" */
 
-    var {mqttPub, mqttSub, mqttStatus, log, newAccessory, Service, Characteristic} = iface;
+module.exports = function (iface) {
+    const {mqttPub, mqttSub, mqttStatus, log, newAccessory, Service, Characteristic} = iface;
 
     /*
      // Required Characteristics
@@ -12,21 +13,21 @@ module.exports = function (iface) {
      */
 
     return function createAccessory_Microphone(settings) {
-        var acc = newAccessory(settings);
+        const acc = newAccessory(settings);
 
         acc.addService(Service.Speaker, settings.name)
             .getCharacteristic(Characteristic.Mute)
-            .on('set', function (value, callback) {
+            .on('set', (value, callback) => {
                 log.debug('< hap set', settings.name, 'Mute', value);
-                var mute = value ? settings.payload.muteTrue : settings.payload.muteFalse;
+                const mute = value ? settings.payload.muteTrue : settings.payload.muteFalse;
                 log.debug('> mqtt', settings.topic.setOn, mute);
                 mqttPub(settings.topic.setMute, mute);
                 callback();
             });
 
-        //update status in homekit if exernal status gets updated
-        mqttSub(settings.topic.statusMute, function (val) {
-            var mute = val !== settings.topic.muteFalse;
+        // Update status in homekit if exernal status gets updated
+        mqttSub(settings.topic.statusMute, val => {
+            const mute = val !== settings.topic.muteFalse;
             log.debug('> hap update', settings.name, 'Mute', mute);
             acc.getService(Service.Speaker)
                 .updateCharacteristic(Characteristic.Mute, mute);
@@ -34,9 +35,9 @@ module.exports = function (iface) {
 
         acc.getService(Service.Speaker)
             .getCharacteristic(Characteristic.Mute)
-            .on('get', function (callback) {
+            .on('get', callback => {
                 log.debug('< hap get', settings.name, 'Mute');
-                var mute = mqttStatus[settings.topic.statusMute] !== settings.payload.muteFalse;
+                const mute = mqttStatus[settings.topic.statusMute] !== settings.payload.muteFalse;
                 log.debug('> hap re_get', settings.name, 'Mute', mute);
                 callback(null, mute);
             });
@@ -44,18 +45,17 @@ module.exports = function (iface) {
         if (settings.topic.setVolume) {
             acc.getService(Service.Speaker)
                 .addCharacteristic(Characteristic.Volume)
-                .on('set', function (value, callback) {
+                .on('set', (value, callback) => {
                     log.debug('< hap set', settings.name, 'Volume', value);
-                    var volume = (value * (settings.payload.volumeFactor || 1)) || 0;
+                    const volume = (value * (settings.payload.volumeFactor || 1)) || 0;
                     log.debug('> mqtt', settings.topic.setVolume, volume);
                     mqttPub(settings.topic.setVolume, volume);
                     callback();
                 });
 
             if (settings.topic.statusVolume) {
-
-                //update status in homekit if exernal status gets updated
-                mqttSub(settings.topic.statusVolume, function(val) {
+                // Update status in homekit if exernal status gets updated
+                mqttSub(settings.topic.statusVolume, val => {
                     log.debug('> hap set', settings.name, 'Volume', mqttStatus[settings.topic.statusVolume]);
                     acc.getService(Service.Speaker)
                         .getCharacteristic(Characteristic.Volume)
@@ -64,19 +64,16 @@ module.exports = function (iface) {
 
                 acc.getService(Service.Speaker)
                     .getCharacteristic(Characteristic.Volume)
-                    .on('get', function (callback) {
+                    .on('get', callback => {
                         log.debug('< hap get', settings.name, 'Volume');
-                        var volume = (mqttStatus[settings.topic.statusVolume] / (settings.payload.volumeFactor || 1)) || 0;
+                        const volume = (mqttStatus[settings.topic.statusVolume] / (settings.payload.volumeFactor || 1)) || 0;
 
                         log.debug('> hap re_get', settings.name, 'Volume', volume);
                         callback(null, volume);
                     });
-
             }
-
         }
 
         return acc;
     };
-
 };

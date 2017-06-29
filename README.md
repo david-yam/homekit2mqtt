@@ -1,9 +1,11 @@
 # homekit2mqtt 
 
-[![License][mit-badge]][mit-url]
 [![NPM version](https://badge.fury.io/js/homekit2mqtt.svg)](http://badge.fury.io/js/homekit2mqtt)
 [![Dependency Status](https://img.shields.io/gemnasium/hobbyquaker/homekit2mqtt.svg?maxAge=2592000)](https://gemnasium.com/github.com/hobbyquaker/homekit2mqtt)
-
+[![Build Status](https://travis-ci.org/hobbyquaker/homekit2mqtt.svg?branch=master)](https://travis-ci.org/hobbyquaker/homekit2mqtt)
+[![codecov](https://codecov.io/gh/hobbyquaker/homekit2mqtt/branch/master/graph/badge.svg)](https://codecov.io/gh/hobbyquaker/homekit2mqtt)
+[![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
+[![License][mit-badge]][mit-url]
 
 HomeKit to MQTT bridge 🏡📱
 
@@ -191,6 +193,9 @@ payload
 
 * doorOpen
 * doorClosed
+* doorOpening
+* doorClosing
+* doorStopped
 * lockUnsecured (optional)
 * lockSecured (optional)
 * onObstructionDetected (optional)
@@ -428,13 +433,24 @@ payload
 
 * identify (optional)
 
+config 
+
+* fahrenheit (optional) - set to true if your sensor publishes degree fahrenheit on mqtt.
+
+props (optional)
+
+* currentTemperature - an object containing properties for the currentTemperature characteristic:
+  * minValue
+  * maxValue
+  * minStep
+
 
 #### Thermostat
 
 topic
 
 * setTargetTemperature
-* setTargetHeatingCoolingState (optional)
+* setTargetHeatingCoolingState (optional) -  - (0 = off, 1 = heat, 2 = cool)
 * statusCurrentTemperature
 * statusTargetTemperature
 * statusCurrentRelativeHumidity (optional)
@@ -442,6 +458,7 @@ topic
 * statusCoolingThresholdTemperature (optional)
 * setHeatingThresholdTemperature (optional)
 * statusHeatingThresholdTemperature (optional)
+* statusCurrentHeatingCoolingState (optional) - (0 = off, 1 = heat, 2 = cool)
 * identify (optional)
 
 payload
@@ -452,6 +469,17 @@ config
 
 * TemperatureDisplayUnits (`0` = Celsius, `1` = Fahrenheit)
 
+props (optional)
+
+* currentTemperature - an object containing properties for the currentTemperature characteristic:
+  * minValue
+  * maxValue
+  * minStep
+
+* targetTemperature - an object containing properties for the currentTemperature characteristic:
+  * minValue
+  * maxValue
+  * minStep
 
 #### Window
 
@@ -495,7 +523,7 @@ payload
 
 ## License
 
-MIT © [Sebastian Raff](https://github.com/hobbyquaker)
+MIT © [Sebastian Raff](https://github.com/hobbyquaker) and homekit2mqtt contributors
 
 
 [mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg?style=flat
