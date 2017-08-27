@@ -5,5 +5,14 @@ node_js:
 before_install:
   - sudo apt-add-repository ppa:mosquitto-dev/mosquitto-ppa -y
   - sudo apt-get update -y
-  - sudo apt-get install mosquitto -y
-  - sudo apt-get install libavahi-compat-libdnssd-dev -y
+  - sudo apt-get install -yq xvfb gnome-keyring libsecret-1-dev python-gnomekeyring libavahi-compat-libdnssd-dev mosquitto
+before_script:
+  - |
+    export DISPLAY=:99.0
+    sh -e /etc/init.d/xvfb start
+    sleep 3
+    dbus-launch /usr/bin/python -c "import gnomekeyring;gnomekeyring.create_sync('login', '');"
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test

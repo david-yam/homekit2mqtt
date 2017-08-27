@@ -1,10 +1,17 @@
 /* eslint unicorn/filename-case: "off", func-names: "off", camelcase: "off", no-unused-vars: "off" */
 
+/* TODO
+ this.addOptionalCharacteristic(Characteristic.StatusActive);
+ this.addOptionalCharacteristic(Characteristic.StatusFault);
+ this.addOptionalCharacteristic(Characteristic.StatusLowBattery);
+ this.addOptionalCharacteristic(Characteristic.StatusTampered);
+ */
+
 module.exports = function (iface) {
     const {mqttPub, mqttSub, mqttStatus, log, newAccessory, Service, Characteristic} = iface;
 
     function convertTemperature(settings, value) {
-        if (settings.config && settings.config.fahrenheit) {
+        if (settings.payload.fahrenheit) {
             log.debug('converting', value, '°F to °C');
             return (value - 32) / 1.8;
         }
@@ -15,9 +22,10 @@ module.exports = function (iface) {
         const sensor = newAccessory(settings);
 
         mqttSub(settings.topic.statusTemperature, val => {
-            log.debug('> hap set', settings.name, 'CurrentTemperature', mqttStatus[settings.topic.statusTemperature]);
+            const temperature = convertTemperature(settings, val);
+            log.debug('> hap update', settings.name, 'CurrentTemperature', temperature);
             sensor.getService(Service.TemperatureSensor)
-                .updateCharacteristic(Characteristic.CurrentTemperature, convertTemperature(settings, val));
+                .updateCharacteristic(Characteristic.CurrentTemperature, temperature);
         });
 
         sensor.addService(Service.TemperatureSensor)
@@ -29,6 +37,29 @@ module.exports = function (iface) {
                 log.debug('> hap re_get', settings.name, temperature);
                 callback(null, temperature);
             });
+
+        if (settings.topic.statusLowBattery) {
+            sensor.getService(Service.TemperatureSensor, settings.name)
+                .getCharacteristic(Characteristic.StatusLowBattery)
+                .on('get', callback => {
+                    log.debug('< hap get', settings.name, 'StatusLowBattery');
+                    const bat = mqttStatus[settings.topic.statusLowBattery] === settings.payload.onLowBattery ?
+                        Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW :
+                        Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
+
+                    log.debug('> hap re_get', settings.name, 'StatusLowBattery', bat);
+                    callback(null, bat);
+                });
+
+            mqttSub(settings.topic.statusLowBattery, val => {
+                const bat = val === settings.payload.onLowBattery ?
+                    Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW :
+                    Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
+                log.debug('> hap update', settings.name, 'StatusLowBattery', bat);
+                sensor.getService(Service.TemperatureSensor)
+                    .updateCharacteristic(Characteristic.StatusLowBattery, bat);
+            });
+        }
 
         return sensor;
     };

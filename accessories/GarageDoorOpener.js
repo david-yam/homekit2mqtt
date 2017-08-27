@@ -19,53 +19,53 @@ module.exports = function (iface) {
             .getCharacteristic(Characteristic.TargetDoorState)
             .on('set', (value, callback) => {
                 log.debug('< hap set', settings.name, 'TargetDoorState', value);
+                /* istanbul ignore else */
                 if (value === Characteristic.TargetDoorState.OPEN) {
                     log.debug('> mqtt publish', settings.topic.setDoor, settings.payload.doorOpen);
                     mqttPub(settings.topic.setDoor, settings.payload.doorOpen);
-
                     callback();
                 } else if (value === Characteristic.TargetDoorState.CLOSED) {
                     log.debug('> mqtt publish', settings.topic.setDoor, settings.payload.doorClosed);
                     mqttPub(settings.topic.setDoor, settings.payload.doorClosed);
-
                     callback();
                 }
             });
 
+        /* istanbul ignore else */
         if (settings.topic.statusDoor) {
             mqttSub(settings.topic.statusDoor, val => {
                 if (val === settings.payload.doorClosed) {
-                    log.debug('> hap set', settings.name, 'CurrentDoorState.CLOSED');
+                    log.debug('> hap update', settings.name, 'CurrentDoorState.CLOSED');
                     garage.getService(Service.GarageDoorOpener)
-                        .setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSED);
+                        .updateCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSED);
                     log.debug('> hap update', settings.name, 'TargetDoorState.CLOSED');
                     garage.getService(Service.GarageDoorOpener)
                         .updateCharacteristic(Characteristic.TargetDoorState, Characteristic.CurrentDoorState.CLOSED);
                 } else if (val === settings.payload.doorOpening) {
-                    log.debug('> hap set', settings.name, 'CurrentDoorState.OPENING');
+                    log.debug('> hap update', settings.name, 'CurrentDoorState.OPENING');
                     garage.getService(Service.GarageDoorOpener)
-                        .setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.OPENING);
+                        .updateCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.OPENING);
                     log.debug('> hap update', settings.name, 'TargetDoorState.OPEN');
                     garage.getService(Service.GarageDoorOpener)
                         .updateCharacteristic(Characteristic.TargetDoorState, Characteristic.CurrentDoorState.OPEN);
                 } else if (val === settings.payload.doorClosing) {
-                    log.debug('> hap set', settings.name, 'CurrentDoorState.CLOSING');
+                    log.debug('> hap update', settings.name, 'CurrentDoorState.CLOSING');
                     garage.getService(Service.GarageDoorOpener)
-                        .setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSING);
+                        .updateCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.CLOSING);
                     log.debug('> hap update', settings.name, 'TargetDoorState.CLOSED');
                     garage.getService(Service.GarageDoorOpener)
                         .updateCharacteristic(Characteristic.TargetDoorState, Characteristic.CurrentDoorState.CLOSED);
                 } else if (val === settings.payload.doorStopped) {
-                    log.debug('> hap set', settings.name, 'CurrentDoorState.STOPPED');
+                    log.debug('> hap update', settings.name, 'CurrentDoorState.STOPPED');
                     garage.getService(Service.GarageDoorOpener)
-                        .setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.STOPPED);
+                        .updateCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.STOPPED);
                     log.debug('> hap update', settings.name, 'TargetDoorState.STOPPED');
                     garage.getService(Service.GarageDoorOpener)
                         .updateCharacteristic(Characteristic.TargetDoorState, Characteristic.CurrentDoorState.STOPPED);
                 } else {
-                    log.debug('> hap set', settings.name, 'CurrentDoorState.OPEN');
+                    log.debug('> hap update', settings.name, 'CurrentDoorState.OPEN');
                     garage.getService(Service.GarageDoorOpener)
-                        .setCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.OPEN);
+                        .updateCharacteristic(Characteristic.CurrentDoorState, Characteristic.CurrentDoorState.OPEN);
                     log.debug('> hap update', settings.name, 'TargetDoorState.OPEN');
                     garage.getService(Service.GarageDoorOpener)
                         .updateCharacteristic(Characteristic.TargetDoorState, Characteristic.CurrentDoorState.OPEN);
@@ -80,6 +80,15 @@ module.exports = function (iface) {
                     if (mqttStatus[settings.topic.statusDoor] === settings.payload.doorClosed) {
                         log.debug('> hap re_get', settings.name, 'CurrentDoorState.CLOSED');
                         callback(null, Characteristic.CurrentDoorState.CLOSED);
+                    } else if (mqttStatus[settings.topic.statusDoor] === settings.payload.doorOpening) {
+                        log.debug('> hap re_get', settings.name, 'CurrentDoorState.OPENING');
+                        callback(null, Characteristic.CurrentDoorState.OPENING);
+                    } else if (mqttStatus[settings.topic.statusDoor] === settings.payload.doorClosing) {
+                        log.debug('> hap re_get', settings.name, 'CurrentDoorState.CLOSING');
+                        callback(null, Characteristic.CurrentDoorState.CLOSING);
+                    } else if (mqttStatus[settings.topic.statusDoor] === settings.payload.doorStopped) {
+                        log.debug('> hap re_get', settings.name, 'CurrentDoorState.STOPPED');
+                        callback(null, Characteristic.CurrentDoorState.STOPPED);
                     } else {
                         log.debug('> hap re_get', settings.name, 'CurrentDoorState.OPEN');
                         callback(null, Characteristic.CurrentDoorState.OPEN);
@@ -87,6 +96,7 @@ module.exports = function (iface) {
                 });
         }
 
+        /* istanbul ignore else */
         if (settings.topic.statusObstruction) {
             garage.getService(Service.GarageDoorOpener, settings.name)
                 .getCharacteristic(Characteristic.ObstructionDetected)
@@ -99,17 +109,19 @@ module.exports = function (iface) {
 
             mqttSub(settings.topic.statusObstruction, val => {
                 const obstruction = val === settings.payload.onObstructionDetected;
-                log.debug('> hap set', settings.name, 'ObstructionDetected', obstruction);
+                log.debug('> hap update', settings.name, 'ObstructionDetected', obstruction);
                 garage.getService(Service.GarageDoorOpener)
-                    .setCharacteristic(Characteristic.ObstructionDetected, obstruction);
+                    .updateCharacteristic(Characteristic.ObstructionDetected, obstruction);
             });
         }
 
+        /* istanbul ignore else */
         if (settings.topic.setLock) {
             garage.getService(Service.GarageDoorOpener, settings.name)
                 .getCharacteristic(Characteristic.LockTargetState)
                 .on('set', (value, callback) => {
                     log.debug('< hap set', settings.name, 'LockTargetState', value);
+                    /* istanbul ignore else */
                     if (value === Characteristic.LockTargetState.UNSECURED) {
                         log.debug('> mqtt publish', settings.topic.setLock, settings.payload.lockUnsecured);
                         mqttPub(settings.topic.setLock, settings.payload.lockUnsecured);
@@ -122,22 +134,18 @@ module.exports = function (iface) {
                 });
         }
 
+        /* istanbul ignore else */
         if (settings.topic.statusLock) {
             mqttSub(settings.topic.statusLock, val => {
                 if (val === settings.payload.lockSecured) {
-                    log.debug('> hap set', settings.name, 'LockCurrentState.SECURED');
-                    garage.getService(Service.LockMechanism)
-                        .setCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.SECURED);
                     log.debug('> hap update', settings.name, 'LockCurrentState.SECURED');
-                    garage.getService(Service.LockMechanism)
-                        .updateCharacteristic(Characteristic.LockTargetState, Characteristic.LockCurrentState.SECURED);
+                    garage.getService(Service.GarageDoorOpener)
+                        .updateCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.SECURED);
                 } else {
                     log.debug('> hap set', settings.name, 'LockCurrentState.UNSECURED');
-                    garage.getService(Service.LockMechanism)
-                        .setCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.UNSECURED);
                     log.debug('> hap update', settings.name, 'LockCurrentState.UNSECURED');
-                    garage.getService(Service.LockMechanism)
-                        .updateCharacteristic(Characteristic.LockTargetState, Characteristic.LockCurrentState.UNSECURED);
+                    garage.getService(Service.GarageDoorOpener)
+                        .updateCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.UNSECURED);
                 }
             });
 

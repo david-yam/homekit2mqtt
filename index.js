@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
+const fs = require('fs');
 const path = require('path');
 const Mqtt = require('mqtt');
+const express = require('express');
+const bodyParser = require('body-parser');
+const basicAuth = require('express-basic-auth');
+
+const app = express();
+
 const log = require('yalm');
 const HAP = require('hap-nodejs');
 const pkgHap = require('./node_modules/hap-nodejs/package.json');
@@ -24,19 +31,23 @@ const mqtt = Mqtt.connect(config.url, {will: {topic: config.name + '/connected',
 mqtt.on('connect', () => {
     mqttConnected = true;
     log.info('mqtt connected ' + config.url);
+    /* istanbul ignore if */
     if (!bridgeListening) {
         mqtt.publish(config.name + '/connected', '1', {retain: true});
     }
 });
 
+/* istanbul ignore next */
 mqtt.on('reconnect', () => {
     log.info('mqtt reconnect');
 });
 
+/* istanbul ignore next */
 mqtt.on('offline', () => {
     log.info('mqtt offline');
 });
 
+/* istanbul ignore next */
 mqtt.on('close', () => {
     if (mqttConnected) {
         mqttConnected = false;
@@ -44,6 +55,7 @@ mqtt.on('close', () => {
     }
 });
 
+/* istanbul ignore next */
 mqtt.on('error', err => {
     log.error('mqtt error ' + err);
 });
@@ -74,6 +86,7 @@ mqtt.on('message', (topic, payload) => {
     }
     log.debug('< mqtt', topic, state);
     mqttStatus[topic] = state;
+    /* istanbul ignore else */
     if (mqttCallbacks[topic]) {
         mqttCallbacks[topic].forEach(cb => {
             cb(state);
@@ -84,7 +97,10 @@ mqtt.on('message', (topic, payload) => {
 // MQTT subscribe function that provides a callback on incoming messages.
 // Not meant to be used with wildcards!
 function mqttSub(topic, callback) {
+    topic = String(topic);
+    /* istanbul ignore else */
     if (typeof callback === 'function') {
+        /* istanbul ignore if */
         if (mqttCallbacks[topic]) {
             mqttCallbacks[topic].push(callback);
         } else {
@@ -100,15 +116,18 @@ function mqttSub(topic, callback) {
 
 // MQTT publish function, checks for valid topic and converts payload to string in a meaningful manner.
 function mqttPub(topic, payload, options) {
+    /* istanbul ignore if */
     if (!topic || (typeof topic !== 'string')) {
         log.error('mqttPub invalid topic', topic);
     } else {
+        /* istanbul ignore if */
         if (typeof payload === 'object') {
             payload = JSON.stringify(payload);
         } else if (typeof payload !== 'string') {
             payload = String(payload);
         }
         mqtt.publish(topic, payload, options, err => {
+            /* istanbul ignore next */
             if (err) {
                 log.error('mqtt publish error ' + err);
             }
@@ -124,6 +143,7 @@ const Accessory = HAP.Accessory;
 const Service = HAP.Service;
 const Characteristic = HAP.Characteristic;
 
+/* istanbul ignore next */
 if (config.storagedir) {
     log.info('using directory ' + config.storagedir + ' for persistent storage');
 }
@@ -135,12 +155,14 @@ HAP.init(config.storagedir || undefined);
 const bridge = new Bridge(config.bridgename, uuid.generate(config.bridgename));
 
 // Listen for Bridge identification event
+/* istanbul ignore next */
 bridge.on('identify', (paired, callback) => {
     log('< hap bridge identify', paired ? '(paired)' : '(unpaired)');
     callback();
 });
 
 // Handler for Accessory identification events
+/* istanbul ignore next */
 function identify(settings, paired, callback) {
     log.debug('< hap identify', settings.name, paired ? '(paired)' : '(unpaired)');
     if (settings.topic.identify) {
@@ -161,6 +183,10 @@ function newAccessory(settings) {
     if (!settings.payload) {
         settings.payload = {};
     }
+    if (!settings.config) {
+        settings.config = {};
+    }
+    /* istanbul ignore next */
     acc.on('identify', (paired, callback) => {
         identify(settings, paired, callback);
     });
@@ -177,7 +203,7 @@ function loadAccessory(acc) {
 
 // Load and create all accessories
 log.info('loading HomeKit to MQTT mapping file ' + config.mapfile);
-const mapping = require(config.mapfile);
+let mapping = require(config.mapfile);
 let accCount = 0;
 Object.keys(mapping).forEach(id => {
     const a = mapping[id];
@@ -209,10 +235,75 @@ bridge._server.on('pair', username => {
     log('hap paired', username);
 });
 
+/* istanbul ignore next */
 bridge._server.on('unpair', username => {
     log('hap unpaired', username);
 });
 
+/* istanbul ignore next */
 bridge._server.on('verify', () => {
     log('hap verify');
 });
+
+if (!config.disableWeb) {
+    // Get all retained messages
+    log.debug('mqtt subscribe #');
+    mqtt.subscribe('#');
+    const topics = [];
+    let retainTimeout = setTimeout(() => {
+        mqtt.unsubscribe('#');
+    }, 500);
+    mqtt.on('message', (topic, payload, msg) => {
+        if (msg.retain) {
+            clearTimeout(retainTimeout);
+            retainTimeout = setTimeout(() => {
+                log.debug('mqtt unsubscribe #');
+                mqtt.unsubscribe('#');
+            }, 500);
+        }
+        if (topics.indexOf(topic) === -1 && topic !== config.name + '/connected') {
+            topics.push(topic);
+        }
+    });
+
+    app.listen(config.webPort, () => {
+        log.info('http server listening on port', config.webPort);
+    });
+
+    app.use(basicAuth({
+        users: {homekit: config.pincode},
+        challenge: true,
+        realm: 'homekit2mqtt ui'
+    }));
+
+    app.get('/', (req, res) => {
+        res.redirect(301, '/ui');
+    });
+    app.use('/ui', express.static(path.join(__dirname, '/ui')));
+    app.use('/node_modules', express.static(path.join(__dirname, '/node_modules')));
+    app.use('/services.json', express.static(path.join(__dirname, '/services.json')));
+
+    app.get('/topics', (req, res) => {
+        log.info('http > topics');
+        res.send(JSON.stringify(topics));
+    });
+
+    app.get('/config', (req, res) => {
+        log.info('http > config');
+        res.send(JSON.stringify(mapping));
+    });
+
+    app.post('/config', bodyParser.json(), (req, res) => {
+        log.info('http < config');
+        mapping = req.body;
+        fs.writeFileSync(config.mapfile, JSON.stringify(req.body, null, '  '));
+        log.info('saved config to', config.mapfile);
+        res.send('ok');
+    });
+
+    app.get('/quit', (req, res) => {
+        log.info('http < quit');
+        res.send('ok');
+        process.exit(0);
+    });
+}

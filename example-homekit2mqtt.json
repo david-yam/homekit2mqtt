@@ -1,30 +1,135 @@
 {
-  "Thermostat1": {
-    "service": "Thermostat",
-    "name": "Thermostat1",
+  "Temperatur Wohnzimmer": {
+    "service": "TemperatureSensor",
+    "name": "Temperatur Wohnzimmer",
     "topic": {
-      "setTargetTemperature": "Thermostat1/set/TargetTemperature",
-      "statusTargetTemperature": "Thermostat1/status/TargetTemperature",
-      "statusCurrentTemperature": "Thermostat1/status/CurrentTemperature",
-      "statusCurrentRelativeHumidity": "Thermostat1/status/CurrentHumidity"
+      "statusTemperature": "cul/status/Temperatur Wohnzimmer"
+    },
+    "manufacturer": "cul2mqtt - ELV HMS FS20",
+    "model": "HMS100T"
+  },
+
+
+  "hm//Fenster Hobbyraum": {
+    "service": "ContactSensor",
+    "name": "Fenster Hobbyraum",
+    "topic": {
+      "statusContactSensorState": "hm/status/Fenster Hobbyraum/STATE",
+      "statusLowBattery": "hm/status/Fenster Hobbyraum/LOWBAT"
     },
     "payload": {
-
+      "onContactDetected": 0,
+      "onLowBattery": 1
     },
-    "config": {
-      "TemperatureDisplayUnits": 0
+    "manufacturer": "hm2mqtt - Homematic",
+    "model": "SHUTTER_CONTACT"
+  },
+
+
+  "var//Bewegung/Keller": {
+    "service": "MotionSensor",
+    "name": "Bewegungsmelder Keller",
+    "topic": {
+      "statusMotionDetected": "var/status/Bewegung/Keller"
+    },
+    "payload": {
+      "onMotionDetected": 1
     },
     "manufacturer": "Generic",
-    "model": "Thermostat"
+    "model": "Motion Sensor"
   },
-  "WindowCovering1": {
-    "service":  "WindowCovering",
-    "name": "Blind",
+
+
+  "hm//Licht Arbeitsfläche": {
+    "service": "Lightbulb",
+    "name": "Licht Arbeitsfläche",
     "topic": {
-      "setTargetPosition":  "WindowCovering1/set/TargetPosition",
-      "statusTargetPosition":  "WindowCovering1/status/TargetPosition",
-      "statusCurrentPosition":  "WindowCovering1/status/CurrentPosition",
-      "statusPositionStatus":  "WindowCovering1/status/PositionStatus"
+      "setOn": "hm/set/Licht Arbeitsfläche/STATE",
+      "statusOn": "hm/status/Licht Arbeitsfläche/STATE"
+    },
+    "payload": {
+      "onTrue": 1,
+      "onFalse": 0
+    },
+    "manufacturer": "hm2mqtt - Homematic",
+    "model": "SWITCH"
+  },
+
+
+  "hm//Licht Esstisch": {
+    "service": "Lightbulb",
+    "name": "Licht Esstisch",
+    "topic": {
+      "setOn": "hm/set/Licht Esstisch/LEVEL",
+      "setBrightness": "hm/set/Licht Esstisch/LEVEL",
+      "statusOn": "hm/status/Licht Esstisch/LEVEL",
+      "statusBrightness": "hm/status/Licht Esstisch/LEVEL"
+    },
+    "payload": {
+      "brightnessFactor": 0.01,
+      "onTrue": 1.0,
+      "onFalse": 0.0
+    },
+    "manufacturer": "hm2mqtt - Homematic",
+    "model": "DIMMER"
+  },
+
+
+  "hue//lights/Hobbyraum": {
+    "service": "Lightbulb",
+    "name": "Licht Hobbyraum",
+    "topic": {
+      "setOn": "hue/set/lights/Hobbyraum/on",
+      "setBrightness": "hue/set/lights/Hobbyraum/bri",
+      "statusOn": "hue/status/lights/Hobbyraum/on",
+      "statusBrightness": "hue/status/lights/Hobbyraum/bri",
+      "identify": "hue/set/lights/Hobbyraum/alert"
+    },
+    "payload": {
+      "onTrue": true,
+      "onFalse": false,
+      "brightnessFactor": 2.54,
+      "identify": "select"
+    },
+    "manufacturer": "hue2mqtt - Hue",
+    "model": "dimmable light"
+  },
+
+
+  "hue//lights/Bad": {
+    "service": "Lightbulb",
+    "name": "Licht Bad LED",
+    "topic": {
+      "setOn": "hue/set/lights/Bad",
+      "setBrightness": "hue/set/lights/Bad",
+      "setHue": "hue/set/lights/Bad/hue",
+      "setSaturation": "hue/set/lights/Bad/sat",
+      "statusOn": "hue/status/lights/Bad",
+      "statusBrightness": "hue/status/lights/Bad",
+      "statusHue": "hue/status/lights/Bad/hue",
+      "statusSaturation": "hue/status/lights/Bad/sat",
+      "identify": "hue/set/lights/Bad/alert"
+    },
+    "payload": {
+      "onTrue": 254,
+      "onFalse": 0,
+      "brightnessFactor": 2.54,
+      "hueFactor": 181.327,
+      "saturationFactor": 2.54,
+      "identify": "select"
+    },
+    "manufacturer": "hue2mqtt - Hue",
+    "model": "color light"
+  },
+
+  "hm//Rollladen Garten": {
+    "service":  "WindowCovering",
+    "name": "Rollladen Garten",
+    "topic": {
+      "setTargetPosition":  "hm/set/Rollladen Garten:1/LEVEL",
+      "statusTargetPosition":  "hm/status/Rollladen Garten:1/LEVEL_NOTWORKING",
+      "statusCurrentPosition":  "hm/status/Rollladen Garten:1/LEVEL_NOTWORKING",
+      "statusPositionState":  "hm/status/Rollladen Garten:1/DIRECTION"
     },
     "payload": {
       "targetPositionFactor": 0.01,
@@ -32,137 +137,35 @@
       "positionStatusIncreasing": 1,
       "positionStatusDecreasing": 2
     },
-    "manufacturer": "Generic",
-    "model": "WindowCovering"
+    "manufacturer": "hm2mqtt - Homematic",
+    "model": "BLIND"
   },
-  "Lightbulb1": {
-    "service":  "Lightbulb",
-    "name":     "Licht Garten",
-    "topic": {
-      "setOn":          "Lightbulb1/set",
-      "statusOn":       "Lightbulb1/status"
-    },
-    "payload": {
-      "onTrue": 1,
-      "onFalse": 0
-    },
-    "manufacturer": "Generic",
-    "model": "Lightbulb"
-  },
-  "Lightbulb2": {
-    "service":  "Lightbulb",
-    "name":     "Lightbulb2",
-    "topic": {
-      "setOn":            "Lightbulb2/set",
-      "setBrightness":    "Lightbulb2/set/Brightness",
-      "statusOn":         "Lightbulb2/status",
-      "statusBrightness": "Lightbulb2/status/Brightness",
-      "identify":         "Lightbulb2/set/identify"
-    },
-    "payload": {
-      "onTrue": 254,
-      "onFalse": 0,
-      "brightnessFactor": 2.54,
-      "identify": "select"
-    },
-    "manufacturer": "Generic",
-    "model": "Lightbulb Dimmable"
-  },
-  "Lightbulb3": {
-    "service":  "Lightbulb",
-    "name":     "Lightbulb3",
-    "topic": {
-      "setOn":            "Lightbulb3/set",
-      "setBrightness":    "Lightbulb3/set/Brightness",
-      "setHue":           "Lightbulb3/set/Hue",
-      "setSaturation":    "Lightbulb3/set/Saturation",
-      "statusOn":         "Lightbulb3/status",
-      "statusBrightness": "Lightbulb3/status/Brightness",
-      "statusHue":        "Lightbulb3/status/Hue",
-      "statusSaturation": "Lightbulb3/status/Saturation",
-      "identify":         "Lightbulb3/set/identify"
-    },
-    "payload": {
-      "onTrue": 254,
-      "onFalse": 0,
-      "brightnessFactor": 2.54,
-      "hueFactor": 182.042,
-      "saturationFactor": 2.54,
-      "identify": "select"
-    },
-    "manufacturer": "Generic",
-    "model": "Lightbulb Color"
-  },
-  "Switch": {
-    "service": "Switch",
-    "name": "Steckdose Fernseher",
-    "topic": {
-      "statusOn": "Switch/status",
-      "setOn": "Switch/set"
-    },
-    "payload": {
-      "onTrue": 1,
-      "onFalse": 0
-    },
-    "manufacturer": "Generic",
-    "model": "Switch"
-  },
-  "MotionSensor": {
-    "service": "MotionSensor",
-    "name": "MotionSensor",
-    "topic": {
-      "statusMotionDetected": "MotionSensor/status"
-    },
-    "payload": {
-      "onMotionDetected": true
-    },
-    "manufacturer": "Generic",
-    "model": "MotionSensor"
-  },
-  "ContactSensor": {
-    "service": "ContactSensor",
-    "name": "ContactSensor",
-    "topic": {
-      "statusContactSensorState": "ContactSensor/status",
-      "statusLowBattery": "ContactSensor/status/LowBattery"
-    },
-    "payload": {
-      "onContactDetected": 0,
-      "onBatteryLow": 1
-    },
-    "manufacturer": "Generic",
-    "model": "ContactSensor"
-  },
-  "LockMechanism": {
+
+  "hm//Keymatic": {
     "service": "LockMechanism",
-    "name": "LockMechanism",
+    "name": "Keymatic",
     "topic": {
-      "setLock": "LockMechanism/set",
-      "statusLock": "LockMechanism/status"
+      "setLock": "hm/set/Keymatic:1/STATE",
+      "statusLock": "hm/status/Keymatic:1/STATE_NOTWORKING"
     },
     "payload": {
       "lockUnsecured": 1,
       "lockSecured": 0
     },
-    "manufacturer": "Generic",
-    "model": "LockMechanism"
+    "manufacturer": "hm2mqtt - Homematic",
+    "model": "KEYMATIC"
   },
-  "TemperatureSensor": {
-    "service": "TemperatureSensor",
-    "name": "TemperatureSensor",
+
+  "hm//Heizung Hobbyraum": {
+    "service": "Thermostat",
+    "name": "Heizung Hobbyraum",
     "topic": {
-      "statusTemperature": "TemperatureSensor/Temperature"
+      "setTargetTemperature": "hm/set/Temperatur Hobbyraum Soll/SETPOINT",
+      "statusTargetTemperature": "hm/status/Temperatur Hobbyraum Soll/SETPOINT",
+      "statusCurrentTemperature": "hm/status/Temperatur Hobbyraum Ist/TEMPERATURE",
+      "statusCurrentRelativeHumidity": "hm/status/Temperatur Hobbyraum Ist/HUMIDITY"
     },
-    "manufacturer": "Generic",
-    "model": "TemperatureSensor"
-  },
-  "LightSensor": {
-    "service": "LightSensor",
-    "name": "LightSensor",
-    "topic": {
-      "statusAmbientLightLevel": "LightSensor/Brightness"
-    },
-    "manufacturer": "Generic",
-    "model": "LightSensor"
+    "manufacturer": "hm2mqtt - Homematic",
+    "model": "CLIMATECONTROL_REGULATOR"
   }
 }

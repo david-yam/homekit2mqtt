@@ -11,6 +11,7 @@ module.exports = function (iface) {
             .on('set', (value, callback) => {
                 log.debug('< hap set', settings.name, 'LockTargetState', value);
 
+                /* istanbul ignore else */
                 if (value === Characteristic.LockTargetState.UNSECURED) {
                     log.debug('> mqtt publish', settings.topic.setLock, settings.payload.lockUnsecured);
                     mqttPub(settings.topic.setLock, settings.payload.lockUnsecured);
@@ -24,22 +25,28 @@ module.exports = function (iface) {
                 }
             });
 
+        let initial = true;
+        /* istanbul ignore else */
         if (settings.topic.statusLock) {
             mqttSub(settings.topic.statusLock, val => {
                 if (val === settings.payload.lockSecured) {
-                    log.debug('> hap set', settings.name, 'LockCurrentState.SECURED');
+                    log.debug('> hap update', settings.name, 'LockCurrentState.SECURED');
                     acc.getService(Service.LockMechanism)
-                        .setCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.SECURED);
-                    log.debug('> hap update', settings.name, 'LockTargetState.SECURED');
-                    acc.getService(Service.LockMechanism)
-                        .updateCharacteristic(Characteristic.LockTargetState, Characteristic.LockCurrentState.SECURED);
+                        .updateCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.SECURED);
+                    if (initial) {
+                        acc.getService(Service.LockMechanism)
+                            .updateCharacteristic(Characteristic.LockTargetState, Characteristic.LockTargetState.SECURED);
+                        initial = false;
+                    }
                 } else {
-                    log.debug('> hap set', settings.name, 'LockCurrentState.UNSECURED');
+                    log.debug('> hap update', settings.name, 'LockCurrentState.UNSECURED');
                     acc.getService(Service.LockMechanism)
-                        .setCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.UNSECURED);
-                    log.debug('> hap update', settings.name, 'LockTargetState.UNSECURED');
-                    acc.getService(Service.LockMechanism)
-                        .updateCharacteristic(Characteristic.LockTargetState, Characteristic.LockCurrentState.UNSECURED);
+                        .updateCharacteristic(Characteristic.LockCurrentState, Characteristic.LockCurrentState.UNSECURED);
+                    if (initial) {
+                        acc.getService(Service.LockMechanism)
+                            .updateCharacteristic(Characteristic.LockTargetState, Characteristic.LockTargetState.UNSECURED);
+                        initial = false;
+                    }
                 }
             });
 
